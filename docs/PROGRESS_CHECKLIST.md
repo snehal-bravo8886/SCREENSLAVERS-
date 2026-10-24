@@ -15,5 +15,3 @@
 - [ ] Timeline and Evidence Stress Test
 - [ ] Frontend/backend REST connection
 - [ ] Automated detection evaluation
-
-This is a **feature status**, not a claim about hours worked.
