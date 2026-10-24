@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Screenslavers — Workspace Preview</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✳</div><div><strong>SCREENSLAVERS<span class="brand-dot">.</span></strong><small>INVESTIGATION WORKSPACE</small></div></div>
+    <nav aria-label="Primary navigation"><span class="nav-active">Workspace</span><span class="nav-upcoming" title="Not implemented yet">Methodology · soon</span></nav>
+    <div class="topbar-status"><span class="status-dot"></span>UI preview · no API connection</div>
+  </header>
+  <div class="notice" role="note"><strong>Development checkpoint</strong> · Sample transaction rows from synthetic IBM AMLSim data. These are account-centered layout fixtures, <strong>not detected suspicious cases or fraud scores</strong>. Times are simulation steps.</div>
+  <main class="workspace">
+    <aside class="queue panel" aria-label="Sample account previews">
+      <div class="eyebrow">01 / BROWSE</div>
+      <div class="panel-head"><h1>Review queue <small>UI fixtures</small></h1><p>Account-centered samples to test the layout.</p></div>
+      <label class="search-label" for="queue-search">Find a sample account</label>
+      <input id="queue-search" type="search" placeholder="Search account ID">
+      <div id="queue-list" class="queue-list" aria-live="polite"><p class="muted">Loading local preview data…</p></div>
+      <div class="queue-foot">Next: connect detector alerts and a priority-sorted case queue.</div>
+    </aside>
+    <section class="investigate panel" aria-label="Transaction preview">
+      <div class="investigate-head"><div><div class="eyebrow">02 / EXPLORE</div><h2 id="detail-title">Select a sample</h2><p id="detail-subtitle">Local fixture data · no detection logic</p></div><span class="soft-chip">Interface in progress</span></div>
+      <section class="graph-placeholder" aria-label="Network graph placeholder">
+        <div class="graph-draft" aria-hidden="true"><span class="node n1"></span><span class="node n2"></span><span class="node n3"></span><span class="node n4"></span><span class="node n5"></span><span class="link l1"></span><span class="link l2"></span><span class="link l3"></span><span class="link l4"></span></div>
+        <div class="coming"><span class="graph-icon" aria-hidden="true">◎</span><h3>Transaction network</h3><p>Interactive account graph is the next frontend milestone.</p><span class="coming-badge">NOT CONNECTED</span></div>
+      </section>
+      <section class="tx-panel"><div class="section-head"><div><div class="eyebrow">TRANSACTION SAMPLE</div><h3>Transfer rows</h3></div><span id="tx-count" class="soft-chip">—</span></div><div id="tx-list" class="tx-list" aria-live="polite"></div></section>
+    </section>
+    <aside class="intelligence panel" aria-label="Investigation insights placeholder">
+      <div class="eyebrow">03 / ASSESS</div><h2>Case intelligence</h2><p class="muted">Evidence analysis is planned for integration.</p>
+      <div class="tab-row"><span class="tab-active">Overview</span><span class="tab-inactive">Risk factors</span><span class="tab-inactive">Stress Test</span></div>
+      <div class="kpi-grid"><div class="kpi"><span>Sample account</span><strong id="stat-account">—</strong></div><div class="kpi"><span>Visible transfers</span><strong id="stat-transfers">—</strong></div><div class="kpi"><span>Step range</span><strong id="stat-range">—</strong></div><div class="kpi"><span>Priority score</span><strong class="pending">Not computed</strong></div></div>
+      <div class="planned"><div class="eyebrow">COMING NEXT</div><h3>Detection and evidence</h3><p>Pattern alerts, risk factor contributions, mule-like activity review and evidence sensitivity will appear here after backend integration.</p><div class="progress-row"><span>Frontend shell</span><span>In progress</span></div><div class="progress-track"><div class="progress-fill"></div></div><div class="progress-row"><span>Backend integration</span><span>Not started</span></div><div class="progress-track"></div></div>
+    </aside>
+  </main>
+  <footer>SCREENSLAVERS · Synthetic data only · WIP checkpoint · No real bank connections</footer>
+</body>
+</html>
