@@ -1,16 +1,13 @@
 # Screenslavers — Midpoint Development Checkpoint
 
-A work-in-progress investigation interface for **synthetic** financial transaction data, built as a limited hackathon checkpoint.
+A work-in-progress investigation interface for **synthetic** financial transaction data.
 
-**Current state:** a static dashboard shell with selectable account-centered sample transfers, a small offline dataset profile, and a FastAPI health-only scaffold. **The frontend and backend are not connected.** No fraud detection, risk scoring, investigation-case generation, network analysis, or Evidence Stress Test is operational in this checkpoint.
+**Current state:** a static dashboard shell with selectable account-centered sample transfers, a small offline dataset profile, and a FastAPI health-only scaffold. **The frontend and backend are not connected yet.** No fraud detection, risk scoring, investigation-case generation, network analysis, or Evidence Stress Test is operational in this checkpoint.
 
-> This is a limited-scope snapshot, **not** a claim about work completed during any particular number of hackathon hours. The project includes AI-assisted work and may draw on earlier experimentation. Follow the event's rules on pre-existing code and AI disclosure.
-
-## What works
+## What works so far
 
 - Responsive HTML/CSS/JavaScript frontend showing four **UI examples**, not detected suspicious cases.
 - Browsing and searching account-centered transaction rows from IBM AMLSim synthetic data.
-- Simulation **steps** displayed without invented wall-clock timestamps.
 - Standalone FastAPI `GET /health` endpoint (not connected to frontend).
 - Dataset profile and an offline inspection script.
 
