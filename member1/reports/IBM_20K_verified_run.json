@@ -1,0 +1,73 @@
+{
+  "source_file": "data/20K_fanin200cycle200.tgz",
+  "input_audit": {
+    "dataset": "20K_fanin200cycle200.tgz",
+    "dataset_type": "IBM AMLSim archived synthetic scenario",
+    "archive_sha256": "f187bc5784223cdee137ac603164f7183fd58f114090f39e2a12543b6bf48319",
+    "transactions_csv_sha256": "5f650f8b4ce7cc328f1334c65e719496920c422191adbf9fe67f8ae7cfa99fd5",
+    "nodes_csv_sha256": "c43ac5dccc8bd18f2a67f13d7aaa2291664291410b911c00f8577a071d2a2113",
+    "metadata_text": "nodes: 20,000 (1803 fraud nodes)\ntransactions: 120,558\npatterns: 200 cycles and 200 fan-in",
+    "source_columns": [
+      "sourceNodeId",
+      "targetNodeId",
+      "value",
+      "time"
+    ],
+    "account_columns": [
+      "nodeid",
+      "isFraud",
+      "init_balance",
+      "fraudStep"
+    ],
+    "transaction_count": 120558,
+    "accounts_in_nodes_file": 20000,
+    "accounts_present_in_transfers": 19980,
+    "simulation_step_min": 1,
+    "simulation_step_max": 149,
+    "amount_unit": "XXX (unspecified synthetic currency)",
+    "timestamps": "Native integer simulation steps; no calendar date or elapsed minutes inferred",
+    "transactions_with_source_ids": 0,
+    "transaction_ids_derived": 120558,
+    "account_labels_available_offline_only": true,
+    "account_labels_flagged": 1804,
+    "declared_fraud_node_count_in_metadata": 1803,
+    "metadata_account_label_discrepancy": 1,
+    "source_provenance": "User-supplied 20K_fanin200cycle200.tgz; structurally consistent with published IBM AMLSim archive; SHA listed for verification"
+  },
+  "graph": {
+    "nodes": 19980,
+    "edges": 120558
+  },
+  "alert_breakdown": {
+    "fan_in": 680,
+    "fan_out": 100,
+    "rapid_pass_through": 2110,
+    "temporal_cycle": 22
+  },
+  "total_alerts": 2912,
+  "config": {
+    "time_unit": "simulation_step",
+    "fan_window_steps": 4,
+    "fan_min_counterparties": 5,
+    "rapid_window_steps": 3,
+    "cycles_enabled": true,
+    "cycle_window_steps": 12
+  },
+  "runtime_seconds": 1.919,
+  "offline_account_level_evaluation": {
+    "evaluation_type": "account-level exploratory coverage (not money-laundering recall)",
+    "labeled_positive_accounts": 1804,
+    "accounts_mentioned_in_alerts": 7405,
+    "labeled_positive_accounts_mentioned": 904,
+    "proportion_positive_accounts_mentioned": 0.501109,
+    "source_label_zero_accounts_mentioned": 6501,
+    "caveat": "Account labels are NOT per-transaction or per-scenario proof; nonfraud labels do not establish false alerts. Detection did not receive these labels."
+  },
+  "limitations": [
+    "No transaction-level SAR labels or per-scenario mappings are supplied in this archive",
+    "Only simulation-step intervals are used: no assumed real-world hours/days",
+    "Derived transaction IDs refer to stable source CSV row positions (unchanged archive ordering)",
+    "Account-level signal coverage is not case Recall@K or evidence of real-world detection quality",
+    "All detectors are heuristic candidates and may flag routine activity"
+  ]
+}

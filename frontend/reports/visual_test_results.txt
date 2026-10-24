@@ -1,0 +1,8 @@
+backend status: Backend online
+dataset counters: ['1,20,558', '2,912', '2,573']
+case: Case 1086856BCDCD
+graph: 25 nodes; 25 edges
+timeline records: 25
+stress test: ['100.00', '95.26']
+PASS: rendered UI interactions with genuine backend dataset
+PASS: mobile layout rendered

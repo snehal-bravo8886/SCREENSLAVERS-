@@ -1,0 +1,9 @@
+200 GET /health
+200 GET /api/meta
+200 GET /api/summary
+200 GET /api/cases?limit=3
+200 GET /api/cases/CASE-1086856BCDCD
+200 GET /api/cases/CASE-1086856BCDCD/graph
+200 POST stress-test: 100.00 -> 95.26
+Verified: 120,558 transactions / 2,912 alerts / 2,573 cases
+ALL BACKEND SMOKE CHECKS PASSED

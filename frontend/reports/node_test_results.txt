@@ -1,0 +1,68 @@
+
+> screenslavers-investigator-frontend@1.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: backend health is loaded and native simulation step units match
+ok 1 - backend health is loaded and native simulation step units match
+  ---
+  duration_ms: 0.78316
+  type: 'test'
+  ...
+# Subtest: real dataset and case queue agree with analysis baseline
+ok 2 - real dataset and case queue agree with analysis baseline
+  ---
+  duration_ms: 13.252456
+  type: 'test'
+  ...
+# Subtest: case graph edges and timeline exactly match case evidence
+ok 3 - case graph edges and timeline exactly match case evidence
+  ---
+  duration_ms: 7.802325
+  type: 'test'
+  ...
+# Subtest: real stress test returns exact before/after scores without fake data
+ok 4 - real stress test returns exact before/after scores without fake data
+  ---
+  duration_ms: 6.940126
+  type: 'test'
+  ...
+# Subtest: search, detector filters, pagination are backend-driven
+ok 5 - search, detector filters, pagination are backend-driven
+  ---
+  duration_ms: 13.554422
+  type: 'test'
+  ...
+# Subtest: untrusted API strings are HTML escaped before rendering
+ok 6 - untrusted API strings are HTML escaped before rendering
+  ---
+  duration_ms: 0.775288
+  type: 'test'
+  ...
+# Subtest: IBM simulation step range is not converted into a date
+ok 7 - IBM simulation step range is not converted into a date
+  ---
+  duration_ms: 1.110453
+  type: 'test'
+  ...
+# Subtest: labels distinguish synthetic units and detector types
+ok 8 - labels distinguish synthetic units and detector types
+  ---
+  duration_ms: 12.102363
+  type: 'test'
+  ...
+# Subtest: graph layout deterministic and finite on real-shape multigraph
+ok 9 - graph layout deterministic and finite on real-shape multigraph
+  ---
+  duration_ms: 18.231098
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 159.714667

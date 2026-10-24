@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "source_file": "examples/member_b_small_real_data_fixture.json",
+  "handoff_sha256": "19fcbd6dccfb26ee9d942633c936f34cc8ce08f42882c51b0e2351436628db9a",
+  "transactions_validated": 237,
+  "alerts_validated": 4,
+  "alert_breakdown": {
+    "fan_in": 2,
+    "fan_out": 1,
+    "rapid_pass_through": 1
+  },
+  "every_transaction_id_unique": true,
+  "every_alert_id_unique": true,
+  "every_evidence_id_exists": true,
+  "every_alert_matches_evidence_accounts_and_step_range": true,
+  "no_evaluation_fields_in_public_handoff": true,
+  "timestamp_units": "native simulation steps, with timestamp=null"
+}

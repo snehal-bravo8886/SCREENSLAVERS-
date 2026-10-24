@@ -1,0 +1,10 @@
+export const $ = (selector,base=document)=>base.querySelector(selector);
+export const $$ = (selector,base=document)=>Array.from(base.querySelectorAll(selector));
+export const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export const number = value => Number(value ?? 0).toLocaleString('en-IN',{maximumFractionDigits:2});
+export const decimal = value => Number(value ?? 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+export const shortId = value => String(value||'').replace(/^CASE-/,'');
+export const nameDetector = kind => ({fan_in:'Fan-in',fan_out:'Fan-out',rapid_pass_through:'Rapid flow',temporal_cycle:'Cycle'})[kind] || kind;
+export const nameFactor = kind => ({fund_flow:'Fund flow',velocity:'Velocity',network_structure:'Network structure',behavioral_deviation:'Behavioral deviation'})[kind] || kind;
+export const stepRange = item => item?.start_step === item?.end_step ? `Step ${item?.start_step ?? '—'}` : `Steps ${item?.start_step ?? '—'}–${item?.end_step ?? '—'}`;
+export const evidenceAmount = amount => `${decimal(amount)} units`;

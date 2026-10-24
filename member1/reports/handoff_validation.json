@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "source_file": "examples/member_b_IBM_20K_handoff.json",
+  "handoff_sha256": "93f57326a378d71813a6bf233a5cc8d1a8b9a388da7507b5798c53547ca4231d",
+  "transactions_validated": 120558,
+  "alerts_validated": 2912,
+  "alert_breakdown": {
+    "fan_in": 680,
+    "fan_out": 100,
+    "rapid_pass_through": 2110,
+    "temporal_cycle": 22
+  },
+  "every_transaction_id_unique": true,
+  "every_alert_id_unique": true,
+  "every_evidence_id_exists": true,
+  "every_alert_matches_evidence_accounts_and_step_range": true,
+  "no_evaluation_fields_in_public_handoff": true,
+  "timestamp_units": "native simulation steps, with timestamp=null"
+}
