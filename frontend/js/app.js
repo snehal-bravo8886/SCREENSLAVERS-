@@ -3,7 +3,7 @@ import {TransactionGraph} from './graph.js';
 import {$,$$,escapeHTML as h,number,decimal,nameDetector,nameFactor,stepRange,shortId} from './format.js';
 
 const pageLimit=15;
-const state={summary:null,queue:[],total:0,offset:0,selectedId:null,case:null,tab:'evidence',selectedTx:null,focusedAccount:null,stressTx:null,stressResult:null,stressLoading:false,query:'',detector:'',minPriority:0,queueToken:0,caseToken:0,online:false,staged:false,loadingAnalysis:false};
+const state={summary:null,queue:[],total:0,offset:0,selectedId:null,case:null,tab:'evidence',selectedTx:null,focusedAccount:null,stressTx:null,stressResult:null,stressLoading:false,query:'',detector:'',minPriority:0,reviewStatus:'all',reviewStatuses:{},reviewCounts:{to_do:0,in_progress:0,done:0},queueToken:0,caseToken:0,online:false,staged:false,loadingAnalysis:false};
 const graph=new TransactionGraph($('#graph-surface'),{onAccount:account=>selectAccount(account),onTransaction:tx=>selectTransaction(tx)});
 const bind=(selector,event,fn)=>$(selector).addEventListener(event,fn);
 function showError(message){$('#error-text').textContent=String(message);$('#error-banner').classList.remove('hidden')}
@@ -16,7 +16,7 @@ async function bootstrap(){
   try{
     const [health,summary,meta]=await Promise.all([api.health(),api.summary(),api.meta()]);
     if(!health.ready || health.time_unit!=='simulation_step'||summary.time_unit!=='simulation_step'||meta.score_is_probability!==false)throw new Error('Backend data contract differs from expected native-step schema');
-    state.summary=summary;setConnection(true);renderSummary();state.offset=0;await loadCases(true);
+    state.summary=summary;setConnection(true);renderSummary();state.offset=0;await loadCases();route();
   }catch(e){setConnection(false);showError(e.message);if(!state.case){empty($('#case-list'),'Backend unavailable','Start Uvicorn on port 8000 and click Retry.');loading($('#graph-surface'),'Waiting for backend');empty($('#timeline'),'No transaction data','');empty($('#intel-content'),'No investigation selected','')}}
 }
 function renderSummary(){const s=state.summary;if(!s)return;
@@ -25,30 +25,74 @@ function renderSummary(){const s=state.summary;if(!s)return;
   $('#stat-cases').textContent=number(s.cases);
   $('#run-id').textContent=s.run_id||'UNKNOWN';
 }
-async function loadCases(autoselect=false){const token=++state.queueToken;loading($('#case-list'),'Retrieving prioritized cases…');
-  try{const response=await api.cases({limit:pageLimit,offset:state.offset,minPriority:state.minPriority,detector:state.detector,search:state.query});if(token!==state.queueToken)return;
+function renderReviewCounts(){
+  const counts=state.reviewCounts;
+  $('#count-to-do').textContent=number(counts.to_do);$('#review-count-to-do').textContent=number(counts.to_do);
+  $('#count-in-progress').textContent=number(counts.in_progress);$('#review-count-in-progress').textContent=number(counts.in_progress);
+  $('#count-done').textContent=number(counts.done);$('#review-count-done').textContent=number(counts.done);
+}
+async function loadCases(){const token=++state.queueToken;loading($('#case-list'),'Retrieving prioritized cases…');
+  try{const response=await api.cases({limit:pageLimit,offset:state.offset,minPriority:state.minPriority,detector:state.detector,search:state.query,reviewStatus:state.reviewStatus});if(token!==state.queueToken)return;
     if(state.summary && response.run_id!==state.summary.run_id){await bootstrap();return}
-    state.queue=response.items;state.total=response.total;renderQueue();
-    if(autoselect || !state.selectedId){if(response.items[0])await selectCase(response.items[0].case_id);else clearCase()}
+    if(state.offset>=response.total&&state.offset>0){state.offset=response.total?Math.floor((response.total-1)/pageLimit)*pageLimit:0;return loadCases()}
+    state.queue=response.items;state.total=response.total;state.reviewCounts=response.review_counts;
+    for(const item of response.items)state.reviewStatuses[item.case_id]=item.review_status;
+    renderQueue();renderReviewCounts();renderOverviewCases();
   }catch(e){if(token!==state.queueToken)return;showError(e.message);empty($('#case-list'),'Could not load cases',e.message)}
 }
 function renderQueue(){$('#queue-total').textContent=number(state.total);
   const list=$('#case-list');
   if(!state.queue.length){empty(list,'No matching cases','Try another search, detector or priority threshold.');}
-  else{list.innerHTML=state.queue.map((c,i)=>`<button type="button" class="case-item ${state.selectedId===c.case_id?'selected':''}" data-case-id="${h(c.case_id)}" aria-pressed="${state.selectedId===c.case_id}"><div class="case-item-top"><span class="case-rank">${String(state.offset+i+1).padStart(2,'0')}</span><span class="case-id">${h(shortId(c.case_id))}</span><span class="case-score">${decimal(c.priority_score).replace('.00','')}</span></div><div class="case-tagline">${h(c.detector_types.map(nameDetector).join(' · '))}</div><div class="case-mini"><span>${number(c.alert_count)} alerts</span><span>${number(c.evidence_count)} transfers</span><span>${h(stepRange(c))}</span></div></button>`).join('');
-    $$('.case-item',list).forEach(item=>item.addEventListener('click',()=>selectCase(item.dataset.caseId)));
+  else{list.innerHTML=state.queue.map((c,i)=>`<article class="review-item"><button type="button" class="case-item ${state.selectedId===c.case_id?'selected':''}" data-case-id="${h(c.case_id)}" aria-pressed="${state.selectedId===c.case_id}"><div class="case-item-top"><span class="case-rank">${String(state.offset+i+1).padStart(2,'0')}</span><span class="case-id">${h(shortId(c.case_id))}</span><span class="case-score">${decimal(c.priority_score).replace('.00','')}</span></div><div class="case-tagline">${h(c.detector_types.map(nameDetector).join(' · '))}</div><div class="case-mini"><span>${number(c.alert_count)} alerts</span><span>${number(c.evidence_count)} transfers</span><span>${h(stepRange(c))}</span></div></button><label class="status-select-label"><span class="sr-only">Review status for case ${h(shortId(c.case_id))}</span><select class="status-select" data-review-case="${h(c.case_id)}"><option value="to_do" ${c.review_status==='to_do'?'selected':''}>To do</option><option value="in_progress" ${c.review_status==='in_progress'?'selected':''}>In progress</option><option value="done" ${c.review_status==='done'?'selected':''}>Done</option></select></label></article>`).join('');
+    $$('.case-item',list).forEach(item=>item.addEventListener('click',()=>openCase(item.dataset.caseId)));
+    $$('.status-select',list).forEach(select=>select.addEventListener('change',()=>updateReviewStatus(select.dataset.reviewCase,select.value)));
   }
   $('#pagination-label').textContent=state.total?`${number(state.offset+1)}–${number(Math.min(state.offset+pageLimit,state.total))} of ${number(state.total)}`:'0 results';
   $('#prev-page').disabled=state.offset===0;$('#next-page').disabled=state.offset+pageLimit>=state.total;
 }
+function renderOverviewCases(){
+  const list=$('#overview-cases');
+  if(!state.queue.length){empty(list,'No cases in this view','Open Case reviews to change filters.');return}
+  list.innerHTML=state.queue.slice(0,5).map((c,i)=>`<button class="overview-case" type="button" data-case-id="${h(c.case_id)}"><span class="overview-rank">${String(state.offset+i+1).padStart(2,'0')}</span><span class="overview-case-main"><strong>${h(shortId(c.case_id))}</strong><small>${h(c.detector_types.map(nameDetector).join(' · '))}</small></span><span class="overview-priority">${decimal(c.priority_score).replace('.00','')}</span><span class="status-badge status-${h(c.review_status)}">${h(c.review_status.replace('_',' '))}</span></button>`).join('');
+  $$('.overview-case',list).forEach(button=>button.addEventListener('click',()=>openCase(button.dataset.caseId)));
+}
+function showPage(page){
+  const pages={overview:'#overview-page',reviews:'#reviews-page',case:'#case-page',methodology:'#methodology-page'};
+  for(const [name,selector] of Object.entries(pages))$(selector).classList.toggle('hidden',name!==page);
+  $$('[data-nav]').forEach(link=>link.classList.toggle('nav-active',link.dataset.nav===page));
+}
+function route(){
+  const [page='overview', ...parts]=location.hash.slice(1).split('/');
+  if(page==='case'){
+    showPage('case');
+    const id=parts.join('/');
+    if(id&&(state.selectedId!==decodeURIComponent(id)||!state.case))loadCase(decodeURIComponent(id));
+    return;
+  }
+  showPage(['overview','reviews','methodology'].includes(page)?page:'overview');
+}
+function openCase(id){
+  const next=`#case/${encodeURIComponent(id)}`;
+  if(location.hash===next)route();else location.hash=next;
+}
+async function updateReviewStatus(caseId,status){
+  try{
+    const result=await api.setReviewStatus(caseId,status);
+    state.reviewStatuses[caseId]=result.status;
+    if(state.case?.case_id===caseId)$('#case-review-status').value=result.status;
+    await loadCases();
+  }catch(e){showError(e.message);await loadCases()}
+}
 function clearCase(){state.selectedId=null;state.case=null;state.selectedTx=null;state.focusedAccount=null;state.stressResult=null;graph.setData(null);
   $('#selected-case-title').textContent='Transaction network';$('#selected-case-meta').textContent='Select a case to inspect source evidence';$('#priority-score').textContent='—';$('#timeline-counter').textContent='—';empty($('#intel-content'),'No case selected','Select a case from the queue');empty($('#timeline'),'No transfers to show','');}
-async function selectCase(id){if(!id)return;state.selectedId=id;state.case=null;state.stressResult=null;state.selectedTx=null;state.focusedAccount=null;state.stressTx=null;const token=++state.caseToken;renderQueue();
+async function loadCase(id){if(!id)return;state.selectedId=id;state.case=null;state.stressResult=null;state.selectedTx=null;state.focusedAccount=null;state.stressTx=null;const token=++state.caseToken;renderQueue();
   $('#selected-case-title').textContent=`Case ${shortId(id)}`;
   $('#selected-case-meta').textContent='Loading verified case evidence…';loading($('#graph-surface'),'Building directed transaction graph…');loading($('#timeline'),'Loading timeline…');loading($('#intel-content'),'Retrieving risk factors and alerts…');
   try{const detail=await api.case(id);if(token!==state.caseToken)return;
     if(detail.case_id!==id || detail.time_unit!=='simulation_step' ||detail.score_is_probability!==false)throw new Error('Case detail violates the agreed backend contract');
     state.case=detail;
+    state.reviewStatuses[id]=detail.review_status||'to_do';
+    $('#case-review-status').value=state.reviewStatuses[id];
     state.stressTx=detail.transactions?.[0]?.transaction_id||null;
     graph.setData(detail.graph);
     $('#selected-case-meta').textContent=`${number(detail.account_ids.length)} accounts  ·  ${number(detail.evidence_count)} transactions  ·  ${stepRange(detail)}`;
@@ -99,14 +143,17 @@ async function openDataset(){$('#dataset-modal').classList.remove('hidden');$('#
 function closeDataset(){$('#dataset-modal').classList.add('hidden')}
 async function stageArchive(ev){ev.preventDefault();const file=$('#archive-file').files[0];if(!file)return;const name=file.name.toLowerCase();if(!name.endsWith('.tgz')&&!name.endsWith('.tar.gz')){showError('Use an IBM .tgz or .tar.gz archive.');return}if(file.size>10*1024*1024){showError('Maximum supported archive size is 10 MiB.');return}
  $('#upload-button').disabled=true;$('#upload-message').textContent='Validating and staging original archive…';try{const staged=await api.stage(file);state.staged=true;$('#analyze-button').disabled=false;$('#upload-message').textContent='Archive staged. Click Analyze staged archive to activate its new case set.';$('#dataset-status').textContent=JSON.stringify(staged,null,2)}catch(e){showError(e.message);$('#upload-message').textContent=e.message}finally{$('#upload-button').disabled=false}}
-async function analyze(){if(!state.staged||state.loadingAnalysis)return;state.loadingAnalysis=true;$('#analyze-button').disabled=true;$('#upload-message').textContent='Running analysis. Existing cases remain available until successful completion…';try{await api.analyze();state.staged=false;$('#upload-message').textContent='Analysis complete. The active run has changed.';closeDataset();state.selectedId=null;state.case=null;state.selectedTx=null;state.stressResult=null;state.focusedAccount=null;state.offset=0;await bootstrap()}catch(e){showError(e.message);$('#upload-message').textContent=e.message}finally{state.loadingAnalysis=false;$('#analyze-button').disabled=!state.staged}}
+async function analyze(){if(!state.staged||state.loadingAnalysis)return;state.loadingAnalysis=true;$('#analyze-button').disabled=true;$('#upload-message').textContent='Running analysis. Existing cases remain available until successful completion…';try{await api.analyze();state.staged=false;$('#upload-message').textContent='Analysis complete. The active run has changed.';closeDataset();state.selectedId=null;state.case=null;state.selectedTx=null;state.stressResult=null;state.focusedAccount=null;state.offset=0;location.hash='overview';await bootstrap()}catch(e){showError(e.message);$('#upload-message').textContent=e.message}finally{state.loadingAnalysis=false;$('#analyze-button').disabled=!state.staged}}
 
 bind('#refresh-all','click',bootstrap);bind('#retry','click',bootstrap);bind('#dismiss-error','click',hideError);
-bind('#prev-page','click',()=>{state.offset=Math.max(0,state.offset-pageLimit);loadCases(false)});
-bind('#next-page','click',()=>{if(state.offset+pageLimit<state.total){state.offset+=pageLimit;loadCases(false)}});
-bind('#search','input',debounce(ev=>{state.query=ev.target.value.trim();state.offset=0;loadCases(false)},260));
-bind('#detector','change',ev=>{state.detector=ev.target.value;state.offset=0;loadCases(false)});
-bind('#min-priority','change',ev=>{state.minPriority=Number(ev.target.value);state.offset=0;loadCases(false)});
+bind('#prev-page','click',()=>{state.offset=Math.max(0,state.offset-pageLimit);loadCases()});
+bind('#next-page','click',()=>{if(state.offset+pageLimit<state.total){state.offset+=pageLimit;loadCases()}});
+bind('#search','input',debounce(ev=>{state.query=ev.target.value.trim();state.offset=0;loadCases()},260));
+bind('#detector','change',ev=>{state.detector=ev.target.value;state.offset=0;loadCases()});
+bind('#min-priority','change',ev=>{state.minPriority=Number(ev.target.value);state.offset=0;loadCases()});
+bind('#review-status','change',ev=>{state.reviewStatus=ev.target.value;state.offset=0;loadCases()});
+$$('[data-review-filter]').forEach(button=>button.addEventListener('click',()=>{state.reviewStatus=button.dataset.reviewFilter;$('#review-status').value=state.reviewStatus;state.offset=0;location.hash='reviews';loadCases()}));
+bind('#case-review-status','change',ev=>{if(state.case)updateReviewStatus(state.case.case_id,ev.target.value)});
 bind('#clear-focus','click',()=>selectAccount(state.focusedAccount));
 bind('#zoom-in','click',()=>graph.changeZoom(1.24));bind('#zoom-out','click',()=>graph.changeZoom(1/1.24));bind('#zoom-reset','click',()=>graph.reset());
 $$('.tab').forEach(button=>button.addEventListener('click',()=>setTab(button.dataset.tab)));
@@ -115,4 +162,5 @@ bind('#dataset-modal','click',ev=>{if(ev.target.id==='dataset-modal')closeDatase
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closeDataset()});
 bind('#archive-file','change',ev=>$('#file-name').textContent=ev.target.files[0]?.name||'Choose IBM archive');
 bind('#upload-form','submit',stageArchive);bind('#analyze-button','click',analyze);
+window.addEventListener('hashchange',route);
 bootstrap();

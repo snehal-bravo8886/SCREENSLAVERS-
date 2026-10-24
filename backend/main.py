@@ -6,12 +6,12 @@ from hashlib import sha256
 import os
 import uuid
 
-from fastapi import FastAPI, UploadFile, File, Query, Depends, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
 
-from backend.contracts import AnalysisRequest, StressTestRequest
+from backend.contracts import AnalysisRequest, ReviewStatusRequest, StressTestRequest
 from backend.service import Registry, ApiFault, MAX_UPLOAD_BYTES, safe_archive_check
 from src.ibm_scenario import ingest_archive
 
@@ -26,7 +26,7 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        await run_in_threadpool(store.startup)
+        await run_in_threadpool(app.state.registry.startup)
         yield
 
     app = FastAPI(title='Screenslavers Investigator API', version='1.0.0', lifespan=lifespan,
@@ -35,11 +35,12 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
     raw_origins = os.getenv('SCREENSLAVERS_CORS_ORIGINS',
         'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000')
     origins = [v.strip() for v in raw_origins.split(',') if v.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET','POST'],
+    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET','POST','PATCH'],
                        allow_headers=['Content-Type'], allow_credentials=False)
 
     @app.exception_handler(ApiFault)
     async def api_fault_handler(request: Request, exc: ApiFault):
+        del request
         return JSONResponse(status_code=exc.code, content={'error':exc.message})
 
     @app.get('/health', tags=['Health'])
@@ -59,7 +60,8 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
                 'input_schema_version':'member-a-simulation-step-v1',
                 'endpoints': ['/api/summary','/api/cases','/api/cases/{case_id}',
                               '/api/cases/{case_id}/graph','/api/cases/{case_id}/timeline',
-                              '/api/cases/{case_id}/stress-test']}
+                              '/api/cases/{case_id}/stress-test',
+                              '/api/cases/{case_id}/review']}
 
     @app.get('/api/summary', tags=['Metadata'])
     def summary():
@@ -109,10 +111,14 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
                    offset: int = Query(default=0,ge=0),
                    min_priority: float = Query(default=0,ge=0,le=100),
                    detector: str | None = Query(default=None),
-                   search: str | None = Query(default=None,max_length=128)):
+                   search: str | None = Query(default=None,max_length=128),
+                   review_status: str = Query(default='all')):
         engine, sm = store.current()
         if detector is not None and detector not in ('fan_in','fan_out','rapid_pass_through','temporal_cycle'):
-            raise ApiFault(422,'Unknown detector filter')
+            raise ApiFault(422, 'Unknown detector filter')
+        if review_status not in ('all', 'to_do', 'in_progress', 'done'):
+            raise ApiFault(422, 'Unknown review status filter')
+        statuses = store.review_statuses(sm['run_id'])
         all_items = engine.get_case_summaries(top_k=None)
         if min_priority:
             all_items = [c for c in all_items if c['priority_score'] >= min_priority]
@@ -122,9 +128,19 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
             needle = search.strip().lower()
             # Limit search to case ID; full graph-wide search is not silently performed.
             all_items = [c for c in all_items if needle in c['case_id'].lower()]
+        if review_status != 'all':
+            all_items = [c for c in all_items if statuses.get(c['case_id'], 'to_do') == review_status]
         total = len(all_items)
-        return {'run_id':sm['run_id'],'items':all_items[offset:offset+limit],
+        page = all_items[offset:offset+limit]
+        for item in page:
+            item['review_status'] = statuses.get(item['case_id'], 'to_do')
+        counts = {'to_do': 0, 'in_progress': 0, 'done': 0}
+        counts['to_do'] = sm['cases'] - sum(status in ('in_progress', 'done') for status in statuses.values())
+        counts['in_progress'] = sum(status == 'in_progress' for status in statuses.values())
+        counts['done'] = sum(status == 'done' for status in statuses.values())
+        return {'run_id':sm['run_id'],'items':page,
                 'total':total,'limit':limit,'offset':offset,
+                'review_counts':counts,
                 'time_unit':'simulation_step','score_is_probability':False}
 
     def require_case(case_id:str):
@@ -136,8 +152,21 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
 
     @app.get('/api/cases/{case_id}', tags=['Cases'])
     def case_details(case_id: str):
-        engine,_=require_case(case_id)
-        return engine.case_details(case_id)
+        engine, summary = store.current()
+        try:
+            detail = engine.case_details(case_id)
+        except KeyError:
+            raise ApiFault(404,'Unknown investigation case') from None
+        detail['review_status'] = store.review_statuses(summary['run_id']).get(case_id, 'to_do')
+        return detail
+
+    @app.patch('/api/cases/{case_id}/review', tags=['Cases'])
+    def update_case_review(case_id: str, body: ReviewStatusRequest):
+        require_case(case_id)
+        _, summary = store.current()
+        updated_at = store.set_review_status(summary['run_id'], case_id, body.status)
+        return {'run_id': summary['run_id'], 'case_id': case_id,
+                'status': body.status, 'updated_at': updated_at}
 
     @app.get('/api/cases/{case_id}/graph', tags=['Cases'])
     def case_graph(case_id: str):

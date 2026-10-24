@@ -42,7 +42,8 @@ The documented baseline keeps both services on the **same Mac**, and the fronten
 | UI capability | Real endpoint and behavior |
 |---|---|
 | Dataset summary and connection | `GET /health`, `/api/summary`, `/api/meta` |
-| Prioritized case queue | `GET /api/cases` — server pagination; search by case ID, min priority, detector type |
+| Case review queue | `GET /api/cases` — server pagination; filter by review status, search by case ID, min priority, detector type |
+| Shared case review status | `PATCH /api/cases/{case_id}/review` — persistent To do / In progress / Done state stored by the backend |
 | Case view | `GET /api/cases/{case_id}` — all original case alerts, 4 factors, transactions |
 | Graph | Real `case.graph` — directed, unique parallel transaction edges; zoom, pan, node/edge selection |
 | Timeline | Source-native simulation steps, real amounts and original-derived transaction IDs |
@@ -52,6 +53,8 @@ The documented baseline keeps both services on the **same Mac**, and the fronten
 | Dataset dialog | `GET /api/datasets/current`, stage IBM `.tgz` with `POST /api/datasets/load`, then `POST /api/analyze` |
 | Error and loading handling | Offline retry, API errors, empty case-filter results, loading states |
 | Responsive view | Desktop, tablet, and stacked mobile layout |
+
+The interface separates the investigation overview, case-review queue, individual case investigations, and methodology into navigable pages. Review status is shared by clients using the same backend and stored in `runtime/review_status.sqlite3`, scoped to the active run. This prototype has no authentication or per-investigator identity; only expose the backend on a trusted network.
 
 **No backend algorithms were recreated or replaced in JavaScript.** This frontend never calculates an independent suspiciousness score; it renders source evidence and server-returned results.
 

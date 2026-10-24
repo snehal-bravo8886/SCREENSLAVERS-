@@ -23,12 +23,14 @@ export const api = {
   summary: () => request('/api/summary'),
   dataset: () => request('/api/datasets/current'),
   meta: () => request('/api/meta'),
-  cases: ({limit=20,offset=0,minPriority=0,detector='',search=''}={}) => {
+  cases: ({limit=20,offset=0,minPriority=0,detector='',search='',reviewStatus='all'}={}) => {
     const qs = new URLSearchParams({limit:String(limit),offset:String(offset),min_priority:String(minPriority)});
     if(detector) qs.set('detector',detector);
     if(search) qs.set('search',search);
+    if(reviewStatus && reviewStatus !== 'all') qs.set('review_status',reviewStatus);
     return request(`/api/cases?${qs}`);
   },
+  setReviewStatus: (id,status) => request(`/api/cases/${encodeURIComponent(id)}/review`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}),
   case: id => request(`/api/cases/${encodeURIComponent(id)}`),
   graph: id => request(`/api/cases/${encodeURIComponent(id)}/graph`),
   timeline: id => request(`/api/cases/${encodeURIComponent(id)}/timeline`),

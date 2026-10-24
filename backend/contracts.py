@@ -1,4 +1,5 @@
 """HTTP request contracts, intentionally independent of internal Python engine objects."""
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 class AnalysisRequest(BaseModel):
@@ -8,3 +9,7 @@ class AnalysisRequest(BaseModel):
 class StressTestRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     excluded_transaction_id: str = Field(min_length=1, max_length=128)
+
+class ReviewStatusRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    status: Literal["to_do", "in_progress", "done"]

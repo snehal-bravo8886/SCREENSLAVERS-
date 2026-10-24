@@ -1,5 +1,7 @@
 """API-level contract tests over actual Module A/B final handoff."""
 from collections import Counter
+from fastapi.testclient import TestClient
+from backend.main import DEFAULT_ARCHIVE, DEFAULT_SEED, create_app
 
 
 def test_health_is_real(client):
@@ -118,6 +120,28 @@ def test_meta_teaches_frontend_source_units(client):
     assert m['clock_time_available'] is False
     assert m['score_is_probability'] is False
     assert m['stress_test_mode']=='fixed_membership_evidence_sensitivity'
+
+
+def test_review_status_is_shared_persisted_and_filterable(working_client):
+    case_id='CASE-1086856BCDCD'
+    response=working_client.patch(f'/api/cases/{case_id}/review',json={'status':'in_progress'})
+    assert response.status_code==200
+    assert response.json()['status']=='in_progress'
+
+    upload_dir=working_client.app.state.registry.upload_dir
+    shared_app=create_app(seed_path=DEFAULT_SEED,archive_path=DEFAULT_ARCHIVE,upload_dir=upload_dir)
+    with TestClient(shared_app) as second_client:
+        detail=second_client.get(f'/api/cases/{case_id}').json()
+        assert detail['review_status']=='in_progress'
+        queue=second_client.get('/api/cases?review_status=in_progress').json()
+        assert queue['total']==1
+        assert queue['items'][0]['case_id']==case_id
+        assert queue['review_counts']['in_progress']==1
+        assert queue['review_counts']['to_do']==2572
+
+    assert working_client.patch(f'/api/cases/{case_id}/review',json={'status':'invalid'}).status_code==422
+    assert working_client.patch('/api/cases/UNKNOWN/review',json={'status':'done'}).status_code==404
+    assert working_client.get('/api/cases?review_status=unknown').status_code==422
 
 
 def test_no_label_keys_in_api_response(client):
