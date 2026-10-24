@@ -1,4 +1,4 @@
-# Screenslavers — Midpoint Development Checkpoint
+# Screenslavers 
 
 A work-in-progress investigation interface for **synthetic** financial transaction data.
 
