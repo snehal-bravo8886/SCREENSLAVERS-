@@ -1,0 +1,14 @@
+{
+  "source": "IBM AMLSim 20K_fanin200cycle200 synthetic scenario",
+  "transaction_count": 120558,
+  "account_table_rows": 20000,
+  "accounts_seen_in_transfers": 19980,
+  "simulation_step_min": 1,
+  "simulation_step_max": 149,
+  "simulation_step_count": 149,
+  "notes": [
+    "A step is a source simulation index, not a verified clock timestamp.",
+    "The original binary archive is not committed in this GitHub checkpoint.",
+    "Account-centered frontend samples are not fraud or mule detections."
+  ]
+}
