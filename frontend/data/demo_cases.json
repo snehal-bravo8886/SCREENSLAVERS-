@@ -1,0 +1,359 @@
+{
+  "notice": "Account-centered UI-only previews extracted from original IBM AMLSim transactions; not suspicious detections or investigation cases.",
+  "profiles": [
+    {
+      "id": "DRAFT-01",
+      "account": "9985",
+      "title": "Account 9985 review",
+      "status": "Unreviewed sample",
+      "transactions": [
+        {
+          "id": "ROW-004877",
+          "source": "9146",
+          "target": "9985",
+          "value": 522.36,
+          "step": 23
+        },
+        {
+          "id": "ROW-005078",
+          "source": "4724",
+          "target": "9985",
+          "value": 284.79,
+          "step": 23
+        },
+        {
+          "id": "ROW-005729",
+          "source": "5748",
+          "target": "9985",
+          "value": 283.02,
+          "step": 25
+        },
+        {
+          "id": "ROW-005975",
+          "source": "9221",
+          "target": "9985",
+          "value": 110.55,
+          "step": 25
+        },
+        {
+          "id": "ROW-006154",
+          "source": "9985",
+          "target": "9991",
+          "value": 337.29,
+          "step": 25
+        },
+        {
+          "id": "ROW-006397",
+          "source": "9981",
+          "target": "9985",
+          "value": 230.36,
+          "step": 25
+        },
+        {
+          "id": "ROW-006885",
+          "source": "4604",
+          "target": "9985",
+          "value": 213.39,
+          "step": 26
+        },
+        {
+          "id": "ROW-007055",
+          "source": "6988",
+          "target": "9985",
+          "value": 426.85,
+          "step": 26
+        },
+        {
+          "id": "ROW-007157",
+          "source": "9985",
+          "target": "9992",
+          "value": 337.29,
+          "step": 26
+        },
+        {
+          "id": "ROW-007431",
+          "source": "8886",
+          "target": "9985",
+          "value": 516.55,
+          "step": 27
+        },
+        {
+          "id": "ROW-007578",
+          "source": "9985",
+          "target": "16137",
+          "value": 337.29,
+          "step": 27
+        },
+        {
+          "id": "ROW-007661",
+          "source": "1098",
+          "target": "9985",
+          "value": 408.61,
+          "step": 27
+        }
+      ]
+    },
+    {
+      "id": "DRAFT-02",
+      "account": "9992",
+      "title": "Account 9992 review",
+      "status": "Unreviewed sample",
+      "transactions": [
+        {
+          "id": "ROW-009463",
+          "source": "9986",
+          "target": "9992",
+          "value": 216.27,
+          "step": 30
+        },
+        {
+          "id": "ROW-009999",
+          "source": "9992",
+          "target": "19206",
+          "value": 225.11,
+          "step": 30
+        },
+        {
+          "id": "ROW-010245",
+          "source": "9992",
+          "target": "18694",
+          "value": 225.11,
+          "step": 31
+        },
+        {
+          "id": "ROW-011253",
+          "source": "9992",
+          "target": "15622",
+          "value": 225.11,
+          "step": 32
+        },
+        {
+          "id": "ROW-011896",
+          "source": "9399",
+          "target": "9992",
+          "value": 128.64,
+          "step": 33
+        },
+        {
+          "id": "ROW-012122",
+          "source": "9992",
+          "target": "2055",
+          "value": 225.11,
+          "step": 33
+        },
+        {
+          "id": "ROW-012884",
+          "source": "9759",
+          "target": "9992",
+          "value": 395.04,
+          "step": 34
+        },
+        {
+          "id": "ROW-013299",
+          "source": "9992",
+          "target": "15879",
+          "value": 225.11,
+          "step": 34
+        },
+        {
+          "id": "ROW-013790",
+          "source": "9992",
+          "target": "7176",
+          "value": 225.11,
+          "step": 35
+        },
+        {
+          "id": "ROW-014867",
+          "source": "9992",
+          "target": "9994",
+          "value": 225.11,
+          "step": 36
+        },
+        {
+          "id": "ROW-014933",
+          "source": "6773",
+          "target": "9992",
+          "value": 259.69,
+          "step": 36
+        },
+        {
+          "id": "ROW-015759",
+          "source": "9992",
+          "target": "14862",
+          "value": 225.11,
+          "step": 37
+        }
+      ]
+    },
+    {
+      "id": "DRAFT-03",
+      "account": "9981",
+      "title": "Account 9981 review",
+      "status": "Unreviewed sample",
+      "transactions": [
+        {
+          "id": "ROW-006397",
+          "source": "9981",
+          "target": "9985",
+          "value": 230.36,
+          "step": 25
+        },
+        {
+          "id": "ROW-006760",
+          "source": "9981",
+          "target": "9987",
+          "value": 230.36,
+          "step": 26
+        },
+        {
+          "id": "ROW-007213",
+          "source": "9981",
+          "target": "8452",
+          "value": 230.36,
+          "step": 27
+        },
+        {
+          "id": "ROW-008612",
+          "source": "9981",
+          "target": "19973",
+          "value": 230.36,
+          "step": 28
+        },
+        {
+          "id": "ROW-009131",
+          "source": "9981",
+          "target": "19205",
+          "value": 230.36,
+          "step": 29
+        },
+        {
+          "id": "ROW-009682",
+          "source": "9981",
+          "target": "6405",
+          "value": 230.36,
+          "step": 30
+        },
+        {
+          "id": "ROW-009877",
+          "source": "549",
+          "target": "9981",
+          "value": 348.17,
+          "step": 30
+        },
+        {
+          "id": "ROW-010592",
+          "source": "9981",
+          "target": "9990",
+          "value": 230.36,
+          "step": 31
+        },
+        {
+          "id": "ROW-011223",
+          "source": "9981",
+          "target": "3846",
+          "value": 230.36,
+          "step": 32
+        },
+        {
+          "id": "ROW-011397",
+          "source": "2647",
+          "target": "9981",
+          "value": 292.61,
+          "step": 32
+        },
+        {
+          "id": "ROW-012135",
+          "source": "9981",
+          "target": "4873",
+          "value": 230.36,
+          "step": 33
+        },
+        {
+          "id": "ROW-013420",
+          "source": "9981",
+          "target": "19978",
+          "value": 230.36,
+          "step": 34
+        }
+      ]
+    },
+    {
+      "id": "DRAFT-04",
+      "account": "19973",
+      "title": "Account 19973 review",
+      "status": "Unreviewed sample",
+      "transactions": [
+        {
+          "id": "ROW-018332",
+          "source": "6709",
+          "target": "19973",
+          "value": 260.77,
+          "step": 40
+        },
+        {
+          "id": "ROW-023191",
+          "source": "14969",
+          "target": "19973",
+          "value": 586.57,
+          "step": 45
+        },
+        {
+          "id": "ROW-024037",
+          "source": "12442",
+          "target": "19973",
+          "value": 261.76,
+          "step": 46
+        },
+        {
+          "id": "ROW-024199",
+          "source": "3005",
+          "target": "19973",
+          "value": 463.13,
+          "step": 46
+        },
+        {
+          "id": "ROW-029042",
+          "source": "19973",
+          "target": "19970",
+          "value": 223.71,
+          "step": 50
+        },
+        {
+          "id": "ROW-031032",
+          "source": "8671",
+          "target": "19973",
+          "value": 218.99,
+          "step": 51
+        },
+        {
+          "id": "ROW-032105",
+          "source": "19733",
+          "target": "19973",
+          "value": 320.04,
+          "step": 52
+        },
+        {
+          "id": "ROW-032629",
+          "source": "19999",
+          "target": "19973",
+          "value": 350.41,
+          "step": 53
+        },
+        {
+          "id": "ROW-035623",
+          "source": "6363",
+          "target": "19973",
+          "value": 181.67,
+          "step": 55
+        },
+        {
+          "id": "ROW-035691",
+          "source": "19310",
+          "target": "19973",
+          "value": 159.38,
+          "step": 55
+        }
+      ]
+    }
+  ]
+}
