@@ -2,7 +2,6 @@
 
 A four-member, evidence-aware **local prototype** for investigating candidate suspicious patterns in **synthetic IBM AMLSim** transaction data. This is **not** a fraud probability model or a production banking service.
 
-> **Competition integrity:** This repository consolidates earlier AI-assisted prototypes. If your event prohibits pre-event code, **do not submit or represent this repository as built during the event**. Follow the organizer's rules; use this repository only where such reuse is allowed.
 
 ## What it does
 
