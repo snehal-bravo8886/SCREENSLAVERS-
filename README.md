@@ -75,7 +75,9 @@ cd ..
 
 ## Baseline demonstration
 
-The included, previously verified baseline handoff represents **120,558 transactions**, **2,912 candidate alerts**, and **2,573 investigation cases**. The example case `CASE-1086856BCDCD` scores **100.00**; excluding `IBM20K-ROW-0005975` produces **95.26** in the fixed-membership sensitivity test. These are deterministic *prototype outputs*, not independently validated fraud-detection accuracy.
+The included handoff represents **120,558 transactions**, **2,912 candidate alerts**, and **2,573 investigation cases**. With `context_evidence_v2_heuristic`, the current highest-ranked case is `CASE-764AF65F8AE8` at **97.95**. Case `CASE-1086856BCDCD` scores **96.32**; excluding `IBM20K-ROW-0005975` produces **86.31** in the fixed-membership sensitivity test. These are deterministic outputs for the loaded handoff, not independently validated fraud-detection accuracy.
+
+The current `context_evidence_v2_heuristic` priority score is **P = 100 × (0.45M + 0.35A + 0.20C)**. **M** is the maximum severity among active alerts; **A** is the highest focus-account activity anomaly, combining a peer midrank percentile and (when enough prior history exists) historical deviation; **C** measures nonredundant evidence support from detector families after duplicate-family and high-overlap alerts are discounted. The three components are normalized to 0–1, their weighted contributions are rounded individually to two decimals, then summed. Stress Tests keep the case window, membership, and peer reference distribution fixed while recalculating alert status, focus-account activity, and evidence support after exclusions. Formula behavior is tested; predictive accuracy has **not** been measured because account-level evaluation labels are withheld.
 
 ## Dataset and limitations
 

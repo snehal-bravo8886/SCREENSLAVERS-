@@ -1,5 +1,7 @@
 # Independent Member 4 execution verification
 
+> Historical execution snapshot from before the current priority-formula update. Its old score outputs and source hashes are not current. See [`BACKEND_IMPLEMENTATION.md`](./BACKEND_IMPLEMENTATION.md) and [`FRONTEND_API_CONTRACT.md`](./FRONTEND_API_CONTRACT.md) for current formula and bundled-data outputs.
+
 **Executed on the ChatGPT container on 23 October 2026.** The recipient must run the commands on their own Mac to confirm local environment compatibility; no claim is made that the ZIP has already run on their computer.
 
 ## Source identity verification
@@ -30,8 +32,8 @@ The included tests cover original Member B regression tests, native Member A IBM
 - Input alerts: **2,912**
 - Cases: **2,573**
 - Detector breakdown: **680 fan-in, 100 fan-out, 2,110 rapid flow, 22 cycles**
-- Top case ID: **CASE-1086856BCDCD**
-- Stress Test excludes **IBM20K-ROW-0005975** → **100.00 -> 95.26**
+- Historical top case ID: **CASE-1086856BCDCD**
+- Historical Stress Test output for **IBM20K-ROW-0005975** → **100.00 -> 95.26**
 - Baseline case remains **unchanged** after stress test.
 
 ## Actual Uvicorn HTTP integration test

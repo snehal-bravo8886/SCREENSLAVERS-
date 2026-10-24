@@ -77,22 +77,92 @@ def test_id_stability_with_additional_unrelated_alert():
     d['alerts']+=[alert(10,'rapid_pass_through',['T10','T11'],d['transactions'])]
     assert c1 in [c['case_id'] for c in CaseEngine(d).build_cases()]
 
-def test_score_0_to_100_contributions_reconcile():
+def test_v2_score_0_to_100_contributions_reconcile():
     e=CaseEngine(basic());cases=e.build_cases()
     for c in cases:
         assert 0<=c['priority_score']<=100
         assert c['score_is_probability'] is False
+        assert c['score_version']=='context_evidence_v2_heuristic'
         assert round(sum(f['contribution'] for f in c['risk_factors']),2)==c['priority_score']
+        assert abs(sum(f['weight'] for f in c['risk_factors'])-1)<1e-9
         assert all(set(f['transaction_ids'])<=set(c['transaction_ids']) for f in c['risk_factors'])
 
-def test_missing_history_remains_unavailable_and_reweighted():
+
+def test_v2_score_formula_uses_fixed_pattern_activity_support_weights():
+    e=CaseEngine(basic());c=e.build_cases()[0]
+    factors={f['name']:f for f in c['risk_factors']}
+    assert set(factors)=={'pattern_strength','activity_anomaly','evidence_support'}
+    assert factors['pattern_strength']['weight']==.45
+    assert factors['activity_anomaly']['weight']==.35
+    assert factors['evidence_support']['weight']==.20
+    assert factors['pattern_strength']['normalized_value']==pytest.approx(.91)
+    assert factors['activity_anomaly']['normalized_value']==pytest.approx(
+        ((6+.5)/7-.8)/.2)
+    assert factors['evidence_support']['normalized_value']==.5
+    assert c['priority_score']==pytest.approx(round(100*(.45*.91+.35*factors['activity_anomaly']['normalized_value']+.20*.5),2))
+
+@pytest.mark.parametrize(('kind','focus','expected'),[
+    ('fan_in','B',5/12),
+    ('fan_out','A',5/12),
+])
+def test_branching_alert_severity_uses_distinct_counterparty_count(kind,focus,expected):
+    if kind=='fan_in':
+        t=[tx(i,chr(65+i),'B',i) for i in range(1,6)]
+    else:
+        t=[tx(i,'A',chr(65+i),i) for i in range(1,6)]
+    a=alert(1,kind,[x['transaction_id'] for x in t],t,focus)
+    c=CaseEngine(payload(t,[a])).build_cases()[0]
+    factor=next(f for f in c['risk_factors'] if f['name']=='pattern_strength')
+    assert factor['normalized_value']==pytest.approx(expected)
+
+def test_cycle_severity_uses_step_span():
+    t=[tx(1,'A','B',1),tx(2,'B','C',3),tx(3,'C','A',5)]
+    c=CaseEngine(payload(t,[alert(1,'temporal_cycle',['T1','T2','T3'],t)])).build_cases()[0]
+    factor=next(f for f in c['risk_factors'] if f['name']=='pattern_strength')
+    assert factor['normalized_value']==pytest.approx(.75+.25*(12-4)/12)
+
+def test_evidence_support_deduplicates_repeated_detector_family():
+    t=basic()['transactions']
+    first=alert(1,'rapid_pass_through',['T5','T6'],t)
+    duplicate=alert(2,'rapid_pass_through',['T5','T6'],t)
+    c=CaseEngine(payload(t,[first,duplicate])).build_cases()[0]
+    factor=next(f for f in c['risk_factors'] if f['name']=='evidence_support')
+    assert factor['normalized_value']==0
+    assert factor['raw_value']['group_count']==1
+    assert factor['raw_value']['discounted_alerts'][0]['reason']=='family_already_represented'
+
+def test_evidence_support_discounts_high_jaccard_overlap_across_families():
+    t=[tx(1,'A','B',1,100),tx(2,'B','C',2,90),tx(3,'C','A',3,90)]
+    cycle=alert(1,'temporal_cycle',['T1','T2','T3'],t)
+    rapid=alert(2,'rapid_pass_through',['T1','T2'],t)
+    c=CaseEngine(payload(t,[cycle,rapid])).build_cases()[0]
+    factor=next(f for f in c['risk_factors'] if f['name']=='evidence_support')
+    assert factor['normalized_value']==0
+    discounted=factor['raw_value']['discounted_alerts'][0]
+    assert discounted['reason']=='evidence_overlap'
+    assert discounted['overlaps'][0]['jaccard']==pytest.approx(2/3)
+
+def test_missing_history_uses_peer_only_activity_anomaly():
     t=[tx(1,'A','B',1,100),tx(2,'B','C',2,85)]
     e=CaseEngine(payload(t,[alert(1,'rapid_pass_through',['T1','T2'],t)]))
     c=e.build_cases()[0]
     by={f['name']:f for f in c['risk_factors']}
-    assert by['behavioral_deviation']['available'] is False
-    assert by['behavioral_deviation']['normalized_value'] is None
+    assert by['activity_anomaly']['available'] is True
+    assert by['activity_anomaly']['raw_value']['historical']['status']=='insufficient_history'
+    assert by['activity_anomaly']['normalized_value']==by['activity_anomaly']['raw_value']['peer_normalized']
+    assert by['activity_anomaly']['weight']==.35
     assert abs(sum(f['weight'] for f in c['risk_factors'])-1)<1e-5
+
+def test_activity_anomaly_combines_peer_and_prior_history():
+    d=basic()
+    d['transactions'] += [tx(i,'B','H',step,10) for i,step in enumerate(range(1,7),20)]
+    c=CaseEngine(d).build_cases()[0]
+    factor=next(f for f in c['risk_factors'] if f['name']=='activity_anomaly')
+    raw=factor['raw_value']
+    assert raw['historical']['status']=='available'
+    assert raw['historical']['prior_transactions']==6
+    assert raw['historical']['normalized_deviation']==1
+    assert factor['normalized_value']==pytest.approx((raw['peer_normalized']+1)/2)
 
 def test_no_future_data_in_history():
     d=basic();e1=CaseEngine(copy.deepcopy(d));c1=e1.build_cases()[0]
@@ -114,11 +184,12 @@ def test_stress_removes_temporarily_and_recomputes_alert_status():
 
 def test_stress_uses_original_window_for_early_edge():
     e=CaseEngine(basic());c=e.build_cases()[0]
-    baseline=next(f for f in c['risk_factors'] if f['name']=='velocity')
+    baseline=next(f for f in c['risk_factors'] if f['name']=='activity_anomaly')
     s=e.stress_test(c['case_id'],'T1')
-    after=next(f for f in s['after_factors'] if f['name']=='velocity')
-    assert after['raw_value']['inclusive_step_span']==baseline['raw_value']['inclusive_step_span']
-    assert after['raw_value']['evidence_transactions']==baseline['raw_value']['evidence_transactions']-1
+    after=next(f for f in s['after_factors'] if f['name']=='activity_anomaly')
+    assert after['raw_value']['window_steps']==baseline['raw_value']['window_steps']
+    assert after['raw_value']['peer_active_accounts']==baseline['raw_value']['peer_active_accounts']
+    assert after['raw_value']['current_transactions']==baseline['raw_value']['current_transactions']-1
 
 def test_stress_rejects_non_evidence_transaction():
     e=CaseEngine(basic());c=e.build_cases()[0]
@@ -172,7 +243,9 @@ def test_stress_does_not_invent_evidence():
 
 def test_historical_factor_absent_without_enough_earlier_records():
     d=basic();e=CaseEngine(d);c=e.build_cases()[0]
-    assert next(f for f in c['risk_factors'] if f['name']=='behavioral_deviation')['available'] is False
+    activity=next(f for f in c['risk_factors'] if f['name']=='activity_anomaly')
+    assert activity['available'] is True
+    assert activity['raw_value']['historical']['status']=='insufficient_history'
 
 def test_full_cases_cover_all_alerts_once_for_small():
     e=CaseEngine(load_handoff(SMALL));c=e.build_cases()

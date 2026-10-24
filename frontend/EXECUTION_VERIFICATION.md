@@ -1,5 +1,7 @@
 # Module 3 — Execution and verification report (2026-10-23)
 
+> Score values below describe the previous formula and are superseded. Current formula and outputs are documented in `README.md`; predictive accuracy remains unmeasured.
+
 ## Tested with the final Member 4 backend
 
 Backend: `screenslavers` running under Uvicorn on `127.0.0.1:8000`.
@@ -11,8 +13,8 @@ Frontend: static files served by Python `http.server` on port 5173.
 - Node built-in tests: **9 passed, 0 failed, 0 skipped**, while real backend was running.
 - API contract tests exercised genuine summary, case queue, filtered cases, complete case details, 25 directed edges, 25 timeline records and Stress Test.
 - Rendered browser test via local Python transport bridge: **PASS** desktop/mobile, graph interactions, account filter, selected transaction, factor view, Stress Test, reset, detector filter, search and dataset modal.
-- Real selected case: `CASE-1086856BCDCD`, priority 100.00, 7 alerts, 25 original evidence transfers.
-- Golden Stress Test: `IBM20K-ROW-0005975` → **100.00 to 95.26**, original state unchanged.
+- Historical selected case: `CASE-1086856BCDCD`, priority 100.00, 7 alerts, 25 original evidence transfers.
+- Historical Stress Test: `IBM20K-ROW-0005975` → **100.00 to 95.26**, original state unchanged.
 - Files `reports/frontend_desktop.png`, `reports/frontend_stress_test.png`, `reports/frontend_mobile.png` are rendered UI screenshots using **real Member 4 API JSON** (browser network bridged due CI policy).
 
 ## Not yet proved

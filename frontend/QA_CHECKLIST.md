@@ -6,14 +6,14 @@ Use this checklist on the actual Mac/browser. Automated CI cannot replace manual
 - [ ] Member 3 static frontend running on `127.0.0.1:5173`; top bar shows **Backend online**.
 - [ ] No Safari/Chrome developer console errors and no blocked cross-origin fetch requests.
 - [ ] Summary shows 120,558 synthetic transfers, 2,912 alerts, 2,573 cases.
-- [ ] First selected case is `CASE-1086856BCDCD` with priority 100 and 7 alerts.
+- [ ] First selected case is the current highest-priority case; score remains a 0–100 heuristic.
 - [ ] Queue pagination, search by case ID, detector filter, and minimum priority work.
-- [ ] Case graph shows 25 nodes and 25 individual directed transaction edges.
+- [ ] Case graph nodes and transaction edges match the selected case's source evidence.
 - [ ] Click a graph node: corresponding transfer timeline filters to that account.
 - [ ] Click a graph edge or timeline transfer: the correct original transaction ID/amount/step is shown.
 - [ ] Graph zoom in/out/reset and pan work, without page scrolling the graph out of view.
-- [ ] Factors tab shows F/V/N/B with normalized signals and weighted contributions.
-- [ ] Stress Test `IBM20K-ROW-0005975` changes 100.00 → 95.26 on top case.
+- [ ] Risk factor tab shows M/A/C normalized values and weighted points that sum to the case score.
+- [ ] Stress Test reports the same baseline as the case header and recalculates alert status, activity, and support without changing case membership or the stored case.
 - [ ] Reset returns to original baseline case priority; no original evidence is mutated.
 - [ ] Invalid search returns an honest empty state; offline backend shows error and Retry.
 - [ ] Dataset dialog shows backend run and pending-upload state.
@@ -25,7 +25,7 @@ Use this checklist on the actual Mac/browser. Automated CI cannot replace manual
 
 ## Quick judge walkthrough (about 2 minutes)
 
-Open dashboard → present the true IBM-derived summary → open top case → click graph node → inspect corresponding transfers → Factors tab → Stress Test excluding `IBM20K-ROW-0005975` → show changed factor and priority delta → Reset → state limitations truthfully.
+Open dashboard → present the true IBM-derived summary → open top case → click graph node → inspect corresponding transfers → Risk factor tab → run an individual or pattern Stress Test → show the changed factor and priority delta → Reset → state limitations truthfully.
 
 ## Troubleshooting
 

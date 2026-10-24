@@ -8,7 +8,8 @@ class AnalysisRequest(BaseModel):
 
 class StressTestRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    excluded_transaction_id: str = Field(min_length=1, max_length=128)
+    excluded_transaction_id: str | None = Field(default=None, min_length=1, max_length=128)
+    excluded_transaction_ids: list[str] | None = Field(default=None, min_length=1)
 
 class ReviewStatusRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")

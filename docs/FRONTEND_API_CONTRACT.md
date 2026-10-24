@@ -11,6 +11,8 @@ The backend eagerly loads the unchanged Member A real-IBM handoff and the actual
 - `currency:"XXX"` means **unspecified synthetic monetary unit**, not dollars or rupees.
 - Score is a **0–100 investigator review-priority index**, not the probability of fraud.
 - Stress Test is **fixed-membership evidence sensitivity**; source transactions and stored cases are not edited.
+- Current scoring version: `context_evidence_v2_heuristic`; `P = 100 × (0.45M + 0.35A + 0.20C)`. `M` is maximum active-alert severity; `A` is the maximum focus-account anomaly, using peer midrank and available historical deviation; `C = clip((representative_groups − 1)/2, 0, 1)` after same-family and Jaccard-overlap discounting. Factor contributions are rounded to two decimals before summing.
+- `GET /api/meta` declares the formula. Case details and Stress Test responses include `score_components`. Predictive accuracy has not been measured because ground-truth labels are withheld.
 
 ## 2. Case queue
 
@@ -21,15 +23,15 @@ The backend eagerly loads the unchanged Member A real-IBM handoff and the actual
   "run_id": "RUN-BASELINE-IBM20K",
   "items": [
     {
-      "case_id": "CASE-1086856BCDCD",
-      "priority_score": 100.0,
+      "case_id": "CASE-764AF65F8AE8",
+      "priority_score": 97.95,
       "score_is_probability": false,
       "alert_count": 7,
-      "evidence_count": 25,
-      "start_step": 23,
-      "end_step": 29,
+      "evidence_count": 17,
+      "start_step": 54,
+      "end_step": 66,
       "time_unit": "simulation_step",
-      "detector_types": ["fan_in", "fan_out", "rapid_pass_through", "temporal_cycle"],
+      "detector_types": ["fan_in", "rapid_pass_through", "temporal_cycle"],
       "summary": "Review candidate..."
     }
   ],
@@ -52,7 +54,7 @@ The backend eagerly loads the unchanged Member A real-IBM handoff and the actual
 
 ## 3. Detail, graph and timeline
 
-- **GET** `/api/cases/{case_id}` → complete actual case, F/V/N/B factors, original alerts, evidence transactions, graph, timeline.
+- **GET** `/api/cases/{case_id}` → complete actual case, `score_version`, `score_components`, M/A/C factors, alert assessments, original alerts, evidence transactions, graph, timeline. Factor `contribution` values are the weighted priority points; their rounded sum is the case score.
 - **GET** `/api/cases/{case_id}/graph` → `{ "case_id", "nodes": [{"id", "label"}], "edges": [{"id", "transaction_id", "source", "target", "amount", "currency", "simulation_step"}], "time_unit":"simulation_step" }`.
 - **GET** `/api/cases/{case_id}/timeline` → `{ "case_id", "time_unit":"simulation_step", "items": [CanonicalTransaction...] }`.
 
@@ -66,9 +68,9 @@ The backend eagerly loads the unchanged Member A real-IBM handoff and the actual
 { "excluded_transaction_id": "IBM20K-ROW-0005975" }
 ```
 
-Response contains `baseline_score`, `recomputed_score`, `score_difference`, `changed_factors`, `before_factors`, `after_factors`, `affected_alert_ids`, `membership_recomputed:false`, a `note`, and `time_unit`.
+The body may contain either `excluded_transaction_id` or `excluded_transaction_ids`. The response includes `baseline_score`, `recomputed_score`, `score_difference`, `baseline_score_components`, `recomputed_score_components`, `changed_factors`, `before_factors`, `after_factors`, `affected_alert_ids`, `membership_recomputed:false`, a `note`, and `time_unit`.
 
-**Verified golden demo:** case `CASE-1086856BCDCD` excluding `IBM20K-ROW-0005975` changes the index **100.00 → 95.26**. Do not treat this as proof of AML detection accuracy or rerun case grouping.
+Stress tests keep the case membership and original time bounds fixed, retain the peer reference distribution, and recalculate alert status, activity anomaly, and evidence support after exclusions. Results confirm counterfactual formula behavior only; they are not proof of AML detection accuracy or a rerun of case grouping.
 
 ## 5. Data upload (optional UI enhancement)
 

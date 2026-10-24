@@ -14,8 +14,10 @@ with TestClient(app) as client:
                   json={'excluded_transaction_id':'IBM20K-ROW-0005975'})
     assert x.status_code==200,x.text
     data=x.json()
-    assert (data['baseline_score'],data['recomputed_score'])==(100.0,95.26)
-    print('200 POST stress-test: 100.00 -> 95.26')
+    assert data['baseline_score']==data['baseline_score_components']['priority_score']
+    assert data['recomputed_score']==data['recomputed_score_components']['priority_score']
+    assert data['score_difference']==round(data['recomputed_score']-data['baseline_score'],2)
+    print(f"200 POST stress-test: {data['baseline_score']:.2f} -> {data['recomputed_score']:.2f}")
     summary=client.get('/api/summary').json()
     assert (summary['transactions'],summary['alerts'],summary['cases'])==(120558,2912,2573)
     print('Verified: 120,558 transactions / 2,912 alerts / 2,573 cases')

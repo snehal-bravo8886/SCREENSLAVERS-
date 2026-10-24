@@ -73,7 +73,7 @@ def test_real_archive_upload_and_reanalysis(working_client):
     s=p.json()
     assert (s['transactions'],s['alerts'],s['cases'])==(120558,2912,2573)
     assert s['source']=='archive_reanalysis'
-    assert working_client.get('/api/cases').json()['items'][0]['case_id']=='CASE-1086856BCDCD'
+    assert working_client.get('/api/cases').json()['items'][0]['case_id']=='CASE-764AF65F8AE8'
 
 
 def test_analysis_disabled_cycles_outputs_different_candidate_set(working_client):
@@ -128,4 +128,4 @@ def test_failed_reanalysis_does_not_erase_current_cases(working_client,monkeypat
         assert r.status_code==400
         assert 'failed validation' in r.text
     assert working_client.get('/api/summary').json()==baseline
-    assert working_client.get('/api/cases?limit=1').json()['items'][0]['case_id']=='CASE-1086856BCDCD'
+    assert working_client.get('/api/cases?limit=1').json()['items'][0]['case_id']=='CASE-764AF65F8AE8'

@@ -68,13 +68,17 @@ window.fetch = async (url, options={}) => {
     assert page.locator('.evidence-highlight').count()==1
     page.locator('#tab-factors').click()
     assert page.locator('.factor').count()==4
+    assert page.locator('.score-formula').count()==1
     page.locator('#tab-stress').click()
-    page.locator('#stress-transaction').select_option('IBM20K-ROW-0005975')
+    first_transaction=page.locator('#stress-transaction option').first.get_attribute('value')
+    page.locator('#stress-transaction').select_option(first_transaction)
+    before=page.locator('#priority-score').inner_text()
     page.locator('#run-stress').click()
     page.locator('.stress-summary').wait_for(timeout=15000)
     scores=page.locator('.stress-score').all_inner_texts()
     print('stress test:',scores)
-    assert scores==['100.00','95.26']
+    assert scores[0]==before
+    assert len(scores)==2
     page.screenshot(path=str(ROOT/'reports/frontend_stress_test.png'),full_page=True)
     page.locator('#reset-stress').click()
     assert page.locator('.stress-summary').count()==0

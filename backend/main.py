@@ -56,6 +56,10 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
                 'currency':'XXX', 'currency_label':'unspecified synthetic monetary unit',
                 'score_name':'Investigation priority index (0-100)',
                 'score_is_probability':False,
+                'score_version':'context_evidence_v2_heuristic',
+                'priority_weights':{'pattern_strength':0.45,'activity_anomaly':0.35,'evidence_support':0.20},
+                'score_formula':'P = 100 * (0.45*M + 0.35*A + 0.20*C)',
+                'score_accuracy':'Not measured; account-level evaluation labels are withheld from scoring.',
                 'stress_test_mode':'fixed_membership_evidence_sensitivity',
                 'input_schema_version':'member-a-simulation-step-v1',
                 'endpoints': ['/api/summary','/api/cases','/api/cases/{case_id}',
@@ -183,9 +187,15 @@ def create_app(*, seed_path: Path = DEFAULT_SEED, archive_path: Path = DEFAULT_A
     @app.post('/api/cases/{case_id}/stress-test', tags=['Cases'])
     def case_stress(case_id: str, body: StressTestRequest):
         engine,case = require_case(case_id)
-        if body.excluded_transaction_id not in case['transaction_ids']:
-            raise ApiFault(422,'Excluded transaction is not evidence in this case')
-        return engine.stress_test(case_id, body.excluded_transaction_id)
+        if (body.excluded_transaction_id is None) == (body.excluded_transaction_ids is None):
+            raise ApiFault(422,'Provide either one excluded transaction or a list of excluded transactions')
+        transaction_ids = ([body.excluded_transaction_id] if body.excluded_transaction_id is not None
+                           else body.excluded_transaction_ids)
+        if len(transaction_ids) != len(set(transaction_ids)):
+            raise ApiFault(422,'Excluded transaction IDs must be unique')
+        if not set(transaction_ids).issubset(case['transaction_ids']):
+            raise ApiFault(422,'Every excluded transaction must be evidence in this case')
+        return engine.stress_test(case_id, transaction_ids)
 
     @app.get('/api/transactions/{transaction_id}', tags=['Evidence'])
     def transaction(transaction_id: str):

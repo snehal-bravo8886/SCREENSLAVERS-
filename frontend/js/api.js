@@ -36,7 +36,10 @@ export const api = {
   timeline: id => request(`/api/cases/${encodeURIComponent(id)}/timeline`),
   transaction: id => request(`/api/transactions/${encodeURIComponent(id)}`),
   alert: id => request(`/api/alerts/${encodeURIComponent(id)}`),
-  stress: (id, txid) => request(`/api/cases/${encodeURIComponent(id)}/stress-test`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({excluded_transaction_id:txid})}),
+  stress: (id, transactionIds) => {
+    const body=Array.isArray(transactionIds)?{excluded_transaction_ids:transactionIds}:{excluded_transaction_id:transactionIds};
+    return request(`/api/cases/${encodeURIComponent(id)}/stress-test`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  },
   stage: file => {const form=new FormData();form.append('file',file);return request('/api/datasets/load',{method:'POST',body:form});},
   analyze: () => request('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({include_cycles:true})})
 };

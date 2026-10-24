@@ -19,7 +19,7 @@ from member_b import CaseEngine, engine, load_handoff
 from src.ibm_scenario import ingest_archive, run_archive
 from tests.test_member_b_native import payload
 
-BASELINE_HANDOFF_SHA256 = "93f57326a378d71813a6bf233a5cc8d1a8b9a388da7507b5798c53547ca4231d"
+BASELINE_HANDOFF_SHA256 = "246356baac33424b076bb75913c9744b7d7de11c5e2efdb5b8894ced90e66997"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_TOTAL_UNCOMPRESSED = 15 * 1024 * 1024
 REQUIRED_IBM_MEMBERS = {"transactions.csv", "nodes.csv", "metadata.txt"}
@@ -85,6 +85,10 @@ def _safe_summary(engine: CaseEngine, *, mode: str, digest: str, version: str,
         "currency": "XXX",
         "score_name": "Investigation priority index (0-100)",
         "score_is_probability": False,
+        "score_version": "context_evidence_v2_heuristic",
+        "priority_weights": {"pattern_strength": 0.45, "activity_anomaly": 0.35, "evidence_support": 0.20},
+        "score_formula": "P = 100 * (0.45*M + 0.35*A + 0.20*C)",
+        "score_accuracy": "Not measured; account-level evaluation labels are withheld from scoring.",
         "transactions": stat["input_transactions"],
         "alerts": stat["input_alerts"],
         "cases": stat["cases"],
@@ -94,7 +98,7 @@ def _safe_summary(engine: CaseEngine, *, mode: str, digest: str, version: str,
         "limitations": [
             "Time is measured in native simulation steps, not dates, hours or minutes.",
             "Amounts are in unspecified synthetic monetary units (XXX).",
-            "Detection rules and review-priority weights are uncalibrated heuristics.",
+            "The context-evidence V2 review-priority formula is a heuristic and has not been validated for predictive accuracy.",
             "Account-level source labels are withheld from the case engine and public API.",
             "Stress Test recalculates fixed-case evidence sensitivity, not complete re-detection/regrouping.",
         ],

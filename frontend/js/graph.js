@@ -36,9 +36,10 @@ export function layout(nodes, edges){
   return positions;
 }
 export class TransactionGraph{
-  constructor(container,{onAccount,onTransaction}={}){this.container=container;this.onAccount=onAccount;this.onTransaction=onTransaction;this.focus=null;this.selected=null;this.zoom=1;this.center={x:400,y:202.5};this.model=null;this.draw();}
-  setData(graph){this.model=graph;this.focus=null;this.selected=null;this.zoom=1;this.center={x:400,y:202.5};this.draw()}
-  setSelection(txid,account){this.selected=txid||null;this.focus=account||null;this.applyStyles()}
+  constructor(container,{onAccount,onTransaction}={}){this.container=container;this.onAccount=onAccount;this.onTransaction=onTransaction;this.focus=null;this.selected=null;this.patternTransactions=null;this.zoom=1;this.center={x:400,y:202.5};this.model=null;this.draw();}
+  setData(graph){this.model=graph;this.focus=null;this.selected=null;this.patternTransactions=null;this.zoom=1;this.center={x:400,y:202.5};this.draw()}
+  setSelection(txid,account){this.selected=txid||null;this.focus=account||null;this.patternTransactions=null;this.applyStyles()}
+  setPatternSelection(transactionIds){this.selected=null;this.focus=null;this.patternTransactions=new Set(transactionIds);this.applyStyles()}
   changeZoom(multiplier){this.zoom=clamp(this.zoom*multiplier,.65,3.2);this.adjustView()}
   reset(){this.zoom=1;this.center={x:400,y:202.5};this.adjustView()}
   adjustView(){if(!this.svg)return;const w=800/this.zoom,h=405/this.zoom;this.svg.setAttribute('viewBox',`${this.center.x-w/2} ${this.center.y-h/2} ${w} ${h}`)}
@@ -87,14 +88,18 @@ export class TransactionGraph{
   }
   applyStyles(){if(!this.svg||!this.model)return;
     const connected=new Set(this.model.edges.filter(e=>e.source===this.focus||e.target===this.focus).map(e=>e.transaction_id));
+    const patternAccounts=new Set(this.model.edges.filter(e=>this.patternTransactions?.has(e.transaction_id)).flatMap(e=>[e.source,e.target]));
     for(const edge of this.svg.querySelectorAll('.network-edge')){
-      const id=edge.dataset.txid, selected=id===this.selected;
-      edge.classList.toggle('selected',selected);edge.classList.toggle('faded',!!this.focus&&!connected.has(id));
-      edge.setAttribute('marker-end',selected?'url(#graph-arrow-select)':'url(#graph-arrow)');
+      const id=edge.dataset.txid, selected=id===this.selected,patternMatch=!!this.patternTransactions?.has(id);
+      edge.classList.toggle('selected',selected);edge.classList.toggle('pattern-match',patternMatch);
+      edge.classList.toggle('faded',this.patternTransactions?this.patternTransactions.size>0&&!patternMatch:!!this.focus&&!connected.has(id));
+      edge.setAttribute('marker-end',selected||patternMatch?'url(#graph-arrow-select)':'url(#graph-arrow)');
     }
     for(const g of this.svg.querySelectorAll('.network-node')){
       const id=g.dataset.account,focus=id===this.focus,neighbor=!!this.focus&&this.model.edges.some(e=>(e.source===id&&e.target===this.focus)||(e.target===id&&e.source===this.focus));
-      g.classList.toggle('focus',focus);g.classList.toggle('neighbor',neighbor);g.classList.toggle('faded',!!this.focus&&!focus&&!neighbor);
+      const patternNode=patternAccounts.has(id);
+      g.classList.toggle('focus',focus);g.classList.toggle('neighbor',neighbor);g.classList.toggle('pattern-node',patternNode);
+      g.classList.toggle('faded',this.patternTransactions?this.patternTransactions.size>0&&!patternNode:!!this.focus&&!focus&&!neighbor);
     }
   }
 }

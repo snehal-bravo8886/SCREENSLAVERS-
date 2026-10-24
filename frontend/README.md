@@ -29,7 +29,7 @@ python3 -m http.server 5173 --bind 127.0.0.1
 
 Now open **http://127.0.0.1:5173/** (Safari or Chrome). The backend must show **Backend online** in the top bar. Do not double-click `index.html`: browser ES modules need a local static server.
 
-**Expected:** 120,558 transactions, 2,912 alerts, 2,573 cases, top case `CASE-1086856BCDCD`, review priority 100.00. Cases show **simulation steps**, never invented clock times; transfer amounts are unspecified synthetic units, not dollars or rupees.
+**Expected:** 120,558 transactions, 2,912 alerts, 2,573 cases. Cases show **simulation steps**, never invented clock times; transfer amounts are unspecified synthetic units, not dollars or rupees.
 
 No npm install, React runtime, Vite, CDN scripts, or paid API keys are required. An optional Google Fonts stylesheet enhances appearance if the internet works; the UI also functions offline with system fonts.
 
@@ -44,12 +44,12 @@ The documented baseline keeps both services on the **same Mac**, and the fronten
 | Dataset summary and connection | `GET /health`, `/api/summary`, `/api/meta` |
 | Case review queue | `GET /api/cases` — server pagination; filter by review status, search by case ID, min priority, detector type |
 | Shared case review status | `PATCH /api/cases/{case_id}/review` — persistent To do / In progress / Done state stored by the backend |
-| Case view | `GET /api/cases/{case_id}` — all original case alerts, 4 factors, transactions |
+| Case view | `GET /api/cases/{case_id}` — all original case alerts, 3 factors, transactions |
 | Graph | Real `case.graph` — directed, unique parallel transaction edges; zoom, pan, node/edge selection |
 | Timeline | Source-native simulation steps, real amounts and original-derived transaction IDs |
-| Evidence explorer | Click a graph edge, timeline item, or alert to inspect source evidence |
-| Priority explanations | Four factor contributions F/V/N/B; missing behavioral history is shown as unavailable |
-| Evidence Stress Test | `POST /api/cases/{case_id}/stress-test` with one real case transaction ID; compare scores, changed factors, affected alerts; reset |
+| Evidence explorer | Review alert patterns and flagged accounts; select a pattern to isolate its transfers in the graph and timeline, then open a stress test for the whole pattern or one of its transfers |
+| Priority explanations | Dedicated Risk factor tab shows weighted Pattern strength (M), Account activity anomaly (A), and Evidence support (C) contributions |
+| Evidence Stress Test | Compare before/after scores and factor contributions after excluding one transaction or all unique transfers in a flagged pattern; account selection can scope individual-transaction tests |
 | Dataset dialog | `GET /api/datasets/current`, stage IBM `.tgz` with `POST /api/datasets/load`, then `POST /api/analyze` |
 | Error and loading handling | Offline retry, API errors, empty case-filter results, loading states |
 | Responsive view | Desktop, tablet, and stacked mobile layout |
@@ -58,14 +58,26 @@ The interface separates the investigation overview, case-review queue, individua
 
 **No backend algorithms were recreated or replaced in JavaScript.** This frontend never calculates an independent suspiciousness score; it renders source evidence and server-returned results.
 
-### Evidence Stress Test golden walkthrough
+### Current priority formula: `context_evidence_v2_heuristic`
 
-1. Load `CASE-1086856BCDCD` (the first case in the queue).
+`P = 100 × (0.45M + 0.35A + 0.20C)`
+
+- `M` is the maximum severity among active case alerts. Fan-in/out severity is `clip(distinct counterparties / 12, 0, 1)` once the five-counterparty detector threshold is met. Rapid pass-through severity is `clip(0.6 × outgoing/incoming ratio + 0.4 × (4 − step_gap)/3, 0, 1)` for a qualifying pair. A qualifying three-edge cycle uses `clip(0.75 + 0.25 × (12 − cycle_span)/12, 0, 1)`.
+- `A` is the highest focus-account anomaly. Peer activity is a midrank percentile normalized above the 80th percentile; when sufficient prior history is available, its normalized historical deviation is averaged with the peer value. Otherwise the peer-only result is used.
+- `C = clip((representative_groups − 1)/2, 0, 1)`. Active alerts are considered by severity; one representative per detector family is retained, and alerts with Jaccard evidence overlap of at least 0.5 are discounted.
+- Each factor is normalized to 0–1. Its weighted points are rounded to two decimals, then summed for the 0–100 score.
+- Stress Tests preserve case membership, original time bounds, and the peer reference distribution; they recompute alert status and focus-account activity after excluding selected evidence.
+
+This is a heuristic investigation-priority index, not a fraud probability. Formula and sensitivity behavior are tested. Predictive accuracy is **unknown**, because the engine intentionally does not receive account-level ground-truth labels.
+
+### Evidence Stress Test walkthrough
+
+1. Open a case from the case queue.
 2. Click the **Stress Test** tab on the right.
-3. Select transaction **`IBM20K-ROW-0005975`**.
-4. Click **Run Stress Test**.
-5. Expected: baseline **100.00**, recomputed **95.26**, change **−4.74**; changed factor: `fund_flow`.
-6. Click **Reset**. The original case remains at priority 100.00.
+3. Choose **Individual transaction** and select **`IBM20K-ROW-0005975`**, or choose **Flagged pattern** to exclude all transfers for a selected alert. The Evidence tab also offers direct actions for testing a whole pattern or an individual transfer within it.
+4. Click **Run Stress Test** to compare the baseline and recomputed scores and each factor contribution. A pattern result lists the exact excluded transaction IDs.
+5. Compare the baseline and recomputed score and factor details; exact values depend on the selected case and active dataset.
+6. Click **Reset**. The original case remains unchanged.
 
 **Scientific scope:** This is **fixed-case evidence sensitivity**. It does not globally rerun pattern detection, recluster all cases, estimate a fraud probability, or establish AML precision/recall. The UI explicitly states that scope.
 
@@ -114,7 +126,7 @@ python3 tests/e2e.py
 
 ## 5. Demo and presentation
 
-Show: top counters → select real top case → click nodes/edges → see timeline and actual alerts → explain F/V/N/B factors → Stress Test 100.00 → 95.26 → reset. Keep the explanation factual: candidate patterns, synthetic source, native time steps, uncalibrated review priority.
+Show: top counters → select real top case → click nodes/edges → see timeline and actual alerts → explain M/A/C and their calculations → Stress Test → reset. Keep the explanation factual: candidate patterns, synthetic source, native time steps, heuristic review priority with unmeasured predictive accuracy.
 
 The `reports/frontend_desktop.png`, `reports/frontend_stress_test.png` and `reports/frontend_mobile.png` show renderings from actual Member 4 API data, with no fake bank/customer data inserted into the UI.
 

@@ -10,6 +10,8 @@ This is the HTTP integration layer for the **final ChatGPT-generated packages**,
 - **Member B, real CaseEngine:** `member_b/engine.py` is copied from the final verified Module B source. Exposes groupings, priority factors, directed graph, evidence, timeline and fixed-membership Stress Test without rewriting business logic.
 - **Verified default:** `data/member_a_IBM_20K_handoff.json` is the exact **unchanged, SHA-256 verified** Member A handoff consumed in Member B's tests. The app loads it at startup and computes the cases in memory. Judges can explore immediately, even without uploading anything.
 - **Dataset upload/re-analysis:** accepts a valid IBM AMLSim `.tgz` / `.tar.gz` scenario file, validates safely (archive limits, schema checks), stages it, and only updates analysis after `POST /api/analyze`. A failed run does not replace the current valid cases.
+- **Priority formula:** `context_evidence_v2_heuristic`: `P = 100 × (0.45M + 0.35A + 0.20C)`. `M` is maximum active-alert severity, `A` is the highest focus-account peer-relative and (when available) historical activity anomaly, and `C = clip((representative_groups − 1)/2, 0, 1)` after duplicate-family and high-Jaccard-overlap evidence discounts. Weighted factor points are rounded individually to two decimals and summed.
+- **Accuracy status:** formula behavior is tested, but predictive accuracy is not measured because ground-truth account labels are withheld from the scoring path.
 
 This backend is a **hackathon prototype**, not production bank software. No authentication, audit log database, process supervisor, encryption key management or network rate limiting. Run on `127.0.0.1`; do not expose it directly to the public internet.
 
@@ -58,7 +60,7 @@ curl -s -X POST 'http://127.0.0.1:8000/api/cases/CASE-1086856BCDCD/stress-test' 
   -d '{"excluded_transaction_id":"IBM20K-ROW-0005975"}'
 ```
 
-The stress test returns a real change from **100.00 to 95.26** while leaving the original saved case untouched.
+Stress Tests use fixed case membership and original time bounds, retain the peer reference distribution, recalculate alert assessments and focus-account activity after exclusions, and do not mutate the original saved case. The exact score change depends on the selected case and evidence.
 
 ## Verified output on the official IBM-derived input
 
@@ -69,9 +71,9 @@ The stress test returns a real change from **100.00 to 95.26** while leaving the
 | Candidate detection alerts | 2,912 |
 | Investigation cases | 2,573 |
 | Multi-alert cases | 196 |
-| Top case | `CASE-1086856BCDCD` |
-| Top case priority | 100.00 / 100 (review index, not fraud probability) |
-| Stress Test for `IBM20K-ROW-0005975` | 100.00 → 95.26 |
+| Scoring version | `context_evidence_v2_heuristic` |
+| Score range | 0–100 (review index, not fraud probability) |
+| Predictive accuracy | Not measured; ground-truth labels are withheld from scoring |
 | Units | Simulation steps; currency `XXX` (unspecified) |
 
 ## Endpoints

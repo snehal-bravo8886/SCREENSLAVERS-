@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {escapeHTML,decimal,number,nameDetector,stepRange,shortId} from '../js/format.js';
+import {escapeHTML,decimal,number,nameDetector,explainDetector,stepRange,shortId} from '../js/format.js';
 import {layout} from '../js/graph.js';
 test('untrusted API strings are HTML escaped before rendering',()=>{
   assert.equal(escapeHTML('<script>"&\'</script>'), '&lt;script&gt;&quot;&amp;&#39;&lt;/script&gt;');
@@ -11,6 +11,8 @@ test('IBM simulation step range is not converted into a date',()=>{
 });
 test('labels distinguish synthetic units and detector types',()=>{
   assert.equal(nameDetector('rapid_pass_through'),'Rapid flow');
+  assert.match(explainDetector('fan_in'),/same destination/);
+  assert.match(explainDetector('temporal_cycle'),/loop/);
   assert.equal(decimal(95.26),'95.26');
   assert.equal(shortId('CASE-ABC'),'ABC');
 });
